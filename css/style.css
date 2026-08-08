@@ -260,6 +260,18 @@ ul.lista li {
   border-color: #6a9b4f;
 }
 
+.enlace {
+  display: block;
+  text-align: center;
+  color: #2f6f2f;
+  font-weight: bold;
+  text-decoration: none;
+  padding: 6px 0;
+  border-radius: 10px;
+  background: #eef5e6;
+  margin-top: 6px;
+}
+
 /* ---------- Búsqueda ---------- */
 
 #buscador-flotante {

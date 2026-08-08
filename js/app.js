@@ -467,6 +467,7 @@ function renderResultadoIdentificacion() {
     html += `<button class="boton-grande" onclick="identEstado.paso = 3; verIdentificar();">↩️ Volver a las opciones</button>`;
   } else {
     html += `<p class="texto-chico">Estas son las plantas que más coinciden con lo que marcaste (en orden):</p>`;
+    html += `<p class="texto-chico">🌐 Si tienes internet, toca "Ver información en internet" en cada planta para leer su información.</p>`;
     resultados.forEach((r, i) => {
       const c = r.c;
       html += `<div class="tarjeta">
@@ -481,6 +482,8 @@ function renderResultadoIdentificacion() {
         if (c.origen) html += `<p class="texto-chico">Origen: ${esc(c.origen)}</p>`;
         if (c.descripcion) html += `<p>${esc(c.descripcion)}</p>`;
       }
+      html += `<button class="opcion-diag" onclick="infoOnline('${c.id}')">🌐 Ver información en internet</button>
+        <div id="info-online-${c.id}"></div>`;
       html += `</div>`;
     });
   }
@@ -526,6 +529,73 @@ function eliminarDescubrimiento(id) {
   const lista = obtenerDescubrimientos().filter((d) => d.id !== id);
   try { localStorage.setItem("campo-sano-descubrimientos", JSON.stringify(lista)); } catch (e) {}
   verIdentificar();
+}
+
+// ---------- Información en internet (Wikipedia) ----------
+function buscarInfoPlanta(id) {
+  const c = CULTIVOS.find((x) => x.id === id);
+  if (c) return { nombre: c.nombre, cientifico: c.cientifico };
+  const p = PLANTAS_GENERALES.find((x) => x.id === id);
+  if (p) return { nombre: p.nombre, cientifico: p.cientifico };
+  return null;
+}
+
+function recortar(texto, max) {
+  if (texto.length <= max) return texto;
+  const corte = texto.lastIndexOf(" ", max);
+  return texto.slice(0, corte > 0 ? corte : max) + "…";
+}
+
+function enlaceBusqueda(info) {
+  return `https://www.google.com/search?q=${encodeURIComponent(info.nombre + " " + (info.cientifico || ""))}`;
+}
+
+function infoOnline(id) {
+  const cont = $("#info-online-" + id);
+  if (!cont) return;
+  if (cont.dataset.abierto === "1") { cont.innerHTML = ""; cont.dataset.abierto = ""; return; }
+  cont.dataset.abierto = "1";
+  const info = buscarInfoPlanta(id);
+  if (!info) return;
+
+  if (!navigator.onLine) {
+    cont.innerHTML = `<p class="texto-chico">📴 Sin conexión a internet. Conéctate para ver la información de <b>${esc(info.nombre)}</b>.</p>`;
+    return;
+  }
+
+  cont.innerHTML = `<p class="texto-chico">🌐 Buscando información de <b>${esc(info.nombre)}</b>...</p>`;
+
+  const pedirWiki = (titulo) =>
+    fetch("https://es.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=1&explaintext=1&redirects=1&origin=*&titles=" + encodeURIComponent(titulo))
+      .then((r) => r.json());
+
+  const pintar = (page) => {
+    if (page && page.extract) {
+      cont.innerHTML = `<p class="texto-chico" style="margin-bottom:4px">🌐 Información de Wikipedia:</p>
+        <b>${esc(page.title)}</b>
+        <p>${esc(recortar(page.extract, 700))}</p>
+        <a class="enlace" target="_blank" rel="noopener" href="https://es.wikipedia.org/wiki/${encodeURIComponent(page.title.replace(/ /g, "_"))}">Abrir página completa en Wikipedia →</a>`;
+    } else {
+      cont.innerHTML = `No encontramos artículo en Wikipedia de <b>${esc(info.nombre)}</b>. <a class="enlace" target="_blank" rel="noopener" href="${enlaceBusqueda(info)}">Buscar en Google →</a>`;
+    }
+  };
+
+  pedirWiki(info.nombre)
+    .then((data) => {
+      const pages = data.query && data.query.pages ? Object.values(data.query.pages) : [];
+      const page = pages.find((p) => p.extract);
+      if (page) { pintar(page); return; }
+      if (info.cientifico) {
+        return pedirWiki(info.cientifico).then((data2) => {
+          const pages2 = data2.query && data2.query.pages ? Object.values(data2.query.pages) : [];
+          pintar(pages2.find((p) => p.extract));
+        });
+      }
+      pintar(null);
+    })
+    .catch(() => {
+      cont.innerHTML = `No pudimos consultar internet ahora. <a class="enlace" target="_blank" rel="noopener" href="${enlaceBusqueda(info)}">Buscar en Google →</a>`;
+    });
 }
 
 // ---------- Cámara ----------
