@@ -241,6 +241,25 @@ ul.lista li {
   margin-bottom: 12px;
 }
 
+.entrada {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  background: #fff;
+  border: 2px solid #dce8d0;
+  border-radius: 12px;
+  padding: 13px;
+  margin-bottom: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  color: #1b3a1b;
+}
+
+.entrada:focus {
+  outline: none;
+  border-color: #6a9b4f;
+}
+
 /* ---------- Búsqueda ---------- */
 
 #buscador-flotante {

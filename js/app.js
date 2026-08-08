@@ -286,15 +286,31 @@ function verIdentificar() {
   detenerCamara();
 
   if (identEstado.paso === 0) {
-    contenido.innerHTML = `
+    let html = `
       <div class="tarjeta" style="text-align:center">
         <div style="font-size:2.5rem">🔎🌱</div>
         <h2>¿Qué planta es?</h2>
-        <p>Te ayudamos a reconocer tu planta mirando sus hojas, tallo, frutos y flores. Funciona sin internet.</p>
+        <p>Reconocida cualquier planta del mundo (cultivos, flores, árboles, malezas...) mirando sus hojas, tallo, frutos y flores. Funciona sin internet.</p>
       </div>
       <div class="aviso"><b>¿Cómo funciona?</b> Primero puedes tomarle una foto para tenerla de guía, y luego respondes 3 preguntas fáciles sobre lo que ves.</div>
       <button class="boton-grande" onclick="abrirCamara()"><span class="emoji">📷</span>Tomar foto de la planta</button>
       <button class="boton-grande" onclick="iniciarIdentificacion()"><span class="emoji">✋</span>No tengo foto, guíame con lo que veo</button>`;
+
+    const descubrimientos = obtenerDescubrimientos();
+    if (descubrimientos.length > 0) {
+      html += `<div class="tarjeta"><h2>📒 Mis descubrimientos (${descubrimientos.length})</h2>`;
+      descubrimientos.forEach((d) => {
+        html += `<div class="tarjeta" style="margin:8px 0">
+          ${d.foto ? `<img src="${d.foto}" alt="Foto" style="max-width:100%;max-height:120px;border-radius:8px">` : ""}
+          <b>✨ ${esc(d.nombre)}</b>
+          <p class="texto-chico">Descubierta el ${esc(d.fecha)}</p>
+          ${d.nota ? `<p class="texto-chico">${esc(d.nota)}</p>` : ""}
+          <button class="opcion-diag" onclick="eliminarDescubrimiento('${d.id}')">🗑️ Borrar</button>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+    contenido.innerHTML = html;
     return;
   }
 
@@ -389,34 +405,58 @@ function marcarId(categoria, valor) {
   }
 }
 
-function identificar(cultivoIdOpcional) {
+function tieneCarac(carac, grupo, clave, valor) {
+  if (!carac) return false;
+  if (clave === null) return Array.isArray(carac[grupo]) && carac[grupo].includes(valor);
+  return carac[grupo] && Array.isArray(carac[grupo][clave]) && carac[grupo][clave].includes(valor);
+}
+
+function nombreTipo(t) {
+  const m = {
+    arbol: "🌳 Árbol",
+    arbusto: "🌿 Arbusto",
+    hierba: "🍃 Hierba o mata",
+    rastrera: "🌱 Guía o rastrera",
+    palmera: "🌴 Palmera"
+  };
+  return m[t] || t || "Desconocido";
+}
+
+function identificar() {
   const sel = identEstado.sel;
-  const resultados = CULTIVOS.map((c) => {
-    const carac = obtenerCaracteristicas(c.id);
-    if (!carac) return { c, puntos: 0, coincidencias: 0 };
+  const todo = [
+    ...CULTIVOS.map((c) => ({ c, carac: obtenerCaracteristicas(c.id), esCultivo: true })),
+    ...PLANTAS_GENERALES.map((p) => ({ c: p, carac: p, esCultivo: false }))
+  ];
+  const resultados = todo.map((r) => {
     let puntos = 0;
     let coincidencias = 0;
-    if (identEstado.tipo && carac.tipo === identEstado.tipo) puntos += 3;
-
-    if (identEstado.parte === "hoja") {
-      if (sel.forma) sel.forma.forEach((v) => { if (carac.hoja.forma.includes(v)) { puntos++; coincidencias++; } });
-      if (sel.borde) sel.borde.forEach((v) => { if (carac.hoja.borde.includes(v)) { puntos++; coincidencias++; } });
-      if (sel.nervadura) sel.nervadura.forEach((v) => { if (carac.hoja.nervadura.includes(v)) { puntos++; coincidencias++; } });
-    } else if (identEstado.parte === "fruto") {
-      if (sel.tamaño) sel.tamaño.forEach((v) => { if ((carac.fruto.tamaño || []).includes(v)) { puntos++; coincidencias++; } });
-      if (sel.forma) sel.forma.forEach((v) => { if ((carac.fruto.forma || []).includes(v)) { puntos++; coincidencias++; } });
-      if (sel.color) sel.color.forEach((v) => { if ((carac.fruto.color || []).includes(v)) { puntos++; coincidencias++; } });
-      if (sel.textura) sel.textura.forEach((v) => { if ((carac.fruto.textura || []).includes(v)) { puntos++; coincidencias++; } });
-    } else if (identEstado.parte === "tallo") {
-      if (sel.tallo) sel.tallo.forEach((v) => { if (carac.tallo.includes(v)) { puntos++; coincidencias++; } });
+    if (identEstado.tipo && r.carac && r.carac.tipo === identEstado.tipo) puntos += 3;
+    const p = identEstado.parte;
+    const agrupar = (grupo, clave, lista) => {
+      (lista || []).forEach((v) => {
+        if (tieneCarac(r.carac, grupo, clave, v)) { puntos++; coincidencias++; }
+      });
+    };
+    if (p === "hoja") {
+      agrupar("hoja", "forma", sel.forma);
+      agrupar("hoja", "borde", sel.borde);
+      agrupar("hoja", "nervadura", sel.nervadura);
+    } else if (p === "fruto") {
+      agrupar("fruto", "tamaño", sel.tamaño);
+      agrupar("fruto", "forma", sel.forma);
+      agrupar("fruto", "color", sel.color);
+      agrupar("fruto", "textura", sel.textura);
+    } else if (p === "tallo") {
+      agrupar("tallo", null, sel.tallo);
     } else {
-      if (sel.flor) sel.flor.forEach((v) => { if (carac.flor.includes(v)) { puntos++; coincidencias++; } });
+      agrupar("flor", null, sel.flor);
     }
-    return { c, puntos, coincidencias };
+    return { ...r, puntos, coincidencias };
   }).filter((r) => r.coincidencias > 0)
     .sort((a, b) => b.puntos - a.puntos || b.coincidencias - a.coincidencias);
 
-  return resultados.slice(0, 6);
+  return resultados.slice(0, 8);
 }
 
 function renderResultadoIdentificacion() {
@@ -428,17 +468,64 @@ function renderResultadoIdentificacion() {
   } else {
     html += `<p class="texto-chico">Estas son las plantas que más coinciden con lo que marcaste (en orden):</p>`;
     resultados.forEach((r, i) => {
+      const c = r.c;
       html += `<div class="tarjeta">
         <span class="etiqueta">#${i + 1}</span>
-        <h2>${r.c.emoji} ${esc(r.c.nombre)}</h2>
-        <p class="texto-chico">${esc(r.c.cientifico)} · ${r.coincidencias} característica(s) en común</p>
-        <button class="opcion-diag" onclick="abrirDetalleCultivo('${r.c.id}')">Ver guía de este cultivo →</button>
-      </div>`;
+        <h2>${r.esCultivo ? (c.emoji || "🌿") : "🌿"} ${esc(c.nombre)}</h2>
+        <p class="texto-chico"><b>${esc(c.cientifico || "")}</b> · ${r.coincidencias} característica(s) en común</p>
+        <p class="texto-chico">Tipo: ${nombreTipo(r.carac ? r.carac.tipo : "")}</p>`;
+      if (r.esCultivo) {
+        html += `<button class="opcion-diag" onclick="abrirDetalleCultivo('${c.id}')">Ver guía de este cultivo →</button>`;
+      } else {
+        if (c.familia) html += `<p class="texto-chico">Familia: ${esc(c.familia)}</p>`;
+        if (c.origen) html += `<p class="texto-chico">Origen: ${esc(c.origen)}</p>`;
+        if (c.descripcion) html += `<p>${esc(c.descripcion)}</p>`;
+      }
+      html += `</div>`;
     });
   }
   html += `</div>`;
+  html += `<div class="tarjeta">
+    <h2>🌱 ¿No encuentras tu planta?</h2>
+    <p class="texto-chico">Si ninguna coincide, ¡descúbrela tú mismo! Ponle un nombre común y quedará guardada en tu teléfono.</p>
+    <input id="desc-nombre" class="entrada" type="text" placeholder="Nombre común (ej: Flor de mi abuela)">
+    <textarea id="desc-nota" class="entrada" rows="2" placeholder="Nota (opcional): dónde la viste, cómo es..."></textarea>
+    <p id="desc-error" class="texto-chico" style="color:#c62828"></p>
+    <button class="boton-grande" onclick="guardarDescubrimiento()"><span class="emoji">✨</span>Guardar como descubrimiento</button>
+  </div>`;
   html += `<button class="boton-grande" onclick="identEstado = { paso: 0, tipo: '', parte: '', foto: null, sel: {} }; verIdentificar();">🔄 Empezar de nuevo</button>`;
   return html;
+}
+
+// ---------- Descubrimientos (plantas que el usuario registra) ----------
+function obtenerDescubrimientos() {
+  try { return JSON.parse(localStorage.getItem("campo-sano-descubrimientos")) || []; } catch (e) { return []; }
+}
+
+function guardarDescubrimiento() {
+  const nombre = $("#desc-nombre").value.trim();
+  if (!nombre) {
+    $("#desc-error").textContent = "Escribe al menos un nombre para tu planta.";
+    return;
+  }
+  const nota = $("#desc-nota").value.trim();
+  const lista = obtenerDescubrimientos();
+  lista.unshift({
+    id: "d" + Date.now(),
+    nombre,
+    nota,
+    foto: identEstado.foto || null,
+    fecha: new Date().toLocaleDateString("es-CO")
+  });
+  try { localStorage.setItem("campo-sano-descubrimientos", JSON.stringify(lista)); } catch (e) {}
+  identEstado = { paso: 0, tipo: "", parte: "", foto: null, sel: {} };
+  verIdentificar();
+}
+
+function eliminarDescubrimiento(id) {
+  const lista = obtenerDescubrimientos().filter((d) => d.id !== id);
+  try { localStorage.setItem("campo-sano-descubrimientos", JSON.stringify(lista)); } catch (e) {}
+  verIdentificar();
 }
 
 // ---------- Cámara ----------
