@@ -882,6 +882,132 @@ const CULTIVOS = [
     ],
     cosecha: "1 mes",
     plagas: ["pulgones", "babosas", "gusanos-tierra"]
+  },
+  {
+    id: "pina",
+    nombre: "Piña",
+    emoji: "🍍",
+    cientifico: "Ananas comosus",
+    clima: "Cálido y húmedo. No aguanta heladas.",
+    suelo: "Tierra suelta, bien drenada y con abono orgánico.",
+    epoca: "Cualquier época con lluvias constantes.",
+    germinacion: "Los colinos (hijuelos) echan raíz en 15 a 30 días",
+    riego: "Moderado. Deja secar un poco la tierra entre riegos.",
+    sol: "Sol directo todo el día.",
+    cuidados: [
+      "Siembra la corona o un hijuelo en un montículo para que no se encharque el agua.",
+      "Deja 30 cm entre planta y planta y 60 cm entre hileras.",
+      "Abona cada 3 meses con compost o abono orgánico.",
+      "El fruto tarda 12 a 18 meses. Cuando el centro se pone amarillo, está lista.",
+      "Retira las hojas viejas y secas para evitar enfermedades."
+    ],
+    cosecha: "12 a 18 meses",
+    plagas: ["pulgones", "trips", "hongos-hoja", "gusanos-tierra"]
+  },
+  {
+    id: "fresa",
+    nombre: "Fresa",
+    emoji: "🍓",
+    cientifico: "Fragaria × ananassa",
+    clima: "Frío y templado. Se da bien entre 12 y 20 °C.",
+    suelo: "Tierra suelta, suave y con buen abono orgánico.",
+    epoca: "Inicio de lluvias.",
+    germinacion: "20 a 30 días (o siembra por hijos o estolones)",
+    riego: "Constante, pero sin empapar la tierra.",
+    sol: "Sol de la mañana y sombra ligera en la tarde.",
+    cuidados: [
+      "Siembra en camas elevadas (surcos) para que el agua no toque los frutos.",
+      "Coloca paja o plástico debajo para que las fresas no se ensucien.",
+      "Abona cada mes con compost o abono rico en potasio.",
+      "Corta los hijos (estolones) si no quieres que se extienda.",
+      "Cosecha cuando la fresa esté completamente roja."
+    ],
+    cosecha: "3 a 4 meses",
+    plagas: ["pulgones", "hongos-hoja", "babosas", "trips"]
+  },
+  {
+    id: "uchuva",
+    nombre: "Uchuva (aguaymanto)",
+    emoji: "🟡",
+    cientifico: "Physalis peruviana",
+    clima: "Frío y templado (clima de montaña).",
+    suelo: "Tierra suelta, bien drenada y con abono.",
+    epoca: "Con las primeras lluvias.",
+    germinacion: "15 a 20 días",
+    riego: "Regular, sin encharcar.",
+    sol: "Sol directo la mayor parte del día.",
+    cuidados: [
+      "Siembra la semilla a 1 cm de profundidad en semillero y trasplanta a los 30 días.",
+      "Deja 1 metro entre planta y planta porque el arbusto crece bastante.",
+      "La uchuva cuelga con una capucha de papel; cosecha cuando esté amarilla.",
+      "Poda las ramas secas para que entre aire y sol.",
+      "Abona cada 2 meses con compost o abono de gallinaza."
+    ],
+    cosecha: "4 a 5 meses",
+    plagas: ["mosca-blanca", "pulgones", "hongos-hoja"]
+  },
+  {
+    id: "melon",
+    nombre: "Melón",
+    emoji: "🍈",
+    cientifico: "Cucumis melo",
+    clima: "Cálido y seco.",
+    suelo: "Tierra suelta y arenosa, bien drenada.",
+    epoca: "Inicio del verano (poca lluvia).",
+    germinacion: "5 a 10 días",
+    riego: "Moderado. Mucho al florecer, menos al madurar el fruto.",
+    sol: "Sol directo todo el día.",
+    cuidados: [
+      "Siembra 2 semillas por hoyo, a 2 cm de profundidad.",
+      "Deja 80 cm entre planta y planta y 1 metro entre hileras.",
+      "Pellizca la punta cuando tenga 5 hojas para que se ramifique.",
+      "Coloca paja debajo de los frutos para que no toquen el suelo.",
+      "Cosecha cuando huela dulce y se desprenda fácil del tallo."
+    ],
+    cosecha: "3 a 4 meses",
+    plagas: ["gusanos-tierra", "pulgones", "hongos-hoja", "mosca-blanca"]
+  },
+  {
+    id: "berenjena",
+    nombre: "Berenjena",
+    emoji: "🍆",
+    cientifico: "Solanum melongena",
+    clima: "Cálido y templado.",
+    suelo: "Tierra rica en abono y bien drenada.",
+    epoca: "Con las lluvias.",
+    germinacion: "8 a 12 días",
+    riego: "Regular, sin dejar que se seque del todo.",
+    sol: "Sol directo todo el día.",
+    cuidados: [
+      "Siembra en semillero y trasplanta cuando tenga 4 hojas.",
+      "Deja 60 cm entre planta y planta y 80 cm entre hileras.",
+      "Aporca (sube tierra al pie) cuando crezca para que se sostenga.",
+      "Cosecha cuando el fruto esté firme y brillante, antes de que se ponga blando.",
+      "Abona cada mes con compost o abono orgánico."
+    ],
+    cosecha: "3 a 4 meses",
+    plagas: ["pulgones", "mosca-blanca", "hongos-hoja"]
+  },
+  {
+    id: "coliflor",
+    nombre: "Coliflor",
+    emoji: "🥦",
+    cientifico: "Brassica oleracea var. botrytis",
+    clima: "Frío y templado.",
+    suelo: "Tierra abonada y bien drenada.",
+    epoca: "Clima frío: se puede sembrar casi todo el año.",
+    germinacion: "7 a 10 días",
+    riego: "Constante, sin encharcar.",
+    sol: "Sol medio (mañana) y sombra ligera.",
+    cuidados: [
+      "Siembra en semillero y trasplanta a los 25 días con buen cepellón.",
+      "Deja 50 cm entre planta y planta.",
+      "Cuando la cabeza empiece a formarse, amarra las hojas sobre ella para que quede blanca.",
+      "Cosecha antes de que las florecitas se separen.",
+      "Abona con compost rico en abono al trasplantar."
+    ],
+    cosecha: "3 a 4 meses",
+    plagas: ["pulgones", "hongos-hoja", "gusanos-tierra"]
   }
 ];
 

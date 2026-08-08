@@ -96,7 +96,7 @@ const CARACTERISTICAS = {
     flor: ["verde", "amarilla"]
   }),
   zanahoria: def("hierba", {
-    hoja: { forma: ["partida", "delgada"], borde: ["dentada"] },
+    hoja: { forma: ["partida", "larga"], borde: ["dentada"] },
     fruto: { tamaño: ["mediano"], forma: ["alargado"], color: ["naranja"], textura: ["liso"] },
     flor: ["blanca"]
   }),
@@ -193,7 +193,7 @@ const CARACTERISTICAS = {
   }),
   guanabana: def("arbol", {
     hoja: { forma: ["larga", "ovalada"], borde: ["lisa"] },
-    fruto: { tamaño: ["grande"], forma: ["ovalado", "corazon"], color: ["verde"], textura: ["con espinas"] },
+    fruto: { tamaño: ["grande"], forma: ["ovalado", "redondo"], color: ["verde"], textura: ["con espinas"] },
     flor: ["amarilla", "verde"]
   }),
   lulo: def("arbusto", {
@@ -203,7 +203,7 @@ const CARACTERISTICAS = {
   }),
   guayaba: def("arbol", {
     hoja: { forma: ["ovalada", "ancha"], borde: ["lisa"] },
-    fruto: { tamaño: ["pequeño", "mediano"], forma: ["redondo", "ovalado"], color: ["amarillo", "verde", "rosa"], textura: ["áspero", "liso"] },
+    fruto: { tamaño: ["pequeño", "mediano"], forma: ["redondo", "ovalado"], color: ["amarillo", "verde", "rosado"], textura: ["áspero", "liso"] },
     flor: ["blanca"]
   }),
   pitahaya: def("rastrera", {
@@ -248,13 +248,49 @@ const CARACTERISTICAS = {
     flor: ["blanca", "morada"]
   }),
   cilantro: def("hierba", {
-    hoja: { forma: ["partida", "delgada"], borde: ["dentada"] },
+    hoja: { forma: ["partida", "larga"], borde: ["dentada"] },
     flor: ["blanca"]
   }),
   rabano: def("hierba", {
     hoja: { forma: ["partida", "ancha"], borde: ["dentada"] },
     fruto: { tamaño: ["pequeño"], forma: ["redondo", "alargado"], color: ["rojo", "blanco"], textura: ["liso"] },
     flor: ["blanca", "rosa"]
+  }),
+  pina: def("hierba", {
+    hoja: { forma: ["larga", "en cinta"], borde: ["dentada"], nervadura: ["paralela"] },
+    tallo: ["jugoso", "verde suave"],
+    fruto: { tamaño: ["mediano"], forma: ["ovalado"], color: ["amarillo", "café"], textura: ["áspero"] },
+    flor: ["morada", "roja"]
+  }),
+  fresa: def("rastrera", {
+    hoja: { forma: ["partida"], borde: ["dentada"], nervadura: ["reticulada"] },
+    tallo: ["verde suave", "con pelos"],
+    fruto: { tamaño: ["pequeño"], forma: ["redondo", "ovalado"], color: ["rojo"], textura: ["liso"] },
+    flor: ["blanca"]
+  }),
+  uchuva: def("hierba", {
+    hoja: { forma: ["corazon", "ovalada"], borde: ["dentada"], nervadura: ["reticulada"] },
+    tallo: ["verde suave", "liso"],
+    fruto: { tamaño: ["pequeño"], forma: ["redondo"], color: ["amarillo", "naranja"], textura: ["liso"] },
+    flor: ["amarilla"]
+  }),
+  melon: def("rastrera", {
+    hoja: { forma: ["palmeada", "corazon"], borde: ["dentada"], nervadura: ["palmada"] },
+    tallo: ["verde suave", "con pelos"],
+    fruto: { tamaño: ["mediano", "grande"], forma: ["redondo", "ovalado"], color: ["amarillo", "verde", "naranja"], textura: ["áspero", "liso"] },
+    flor: ["amarilla"]
+  }),
+  berenjena: def("hierba", {
+    hoja: { forma: ["ancha", "ovalada"], borde: ["lisa"], nervadura: ["reticulada"] },
+    tallo: ["verde suave", "con pelos"],
+    fruto: { tamaño: ["mediano"], forma: ["alargado", "ovalado"], color: ["morado"], textura: ["liso"] },
+    flor: ["morada"]
+  }),
+  coliflor: def("hierba", {
+    hoja: { forma: ["ancha", "ovalada"], borde: ["lisa"], nervadura: ["reticulada"] },
+    tallo: ["verde suave", "jugoso"],
+    fruto: { tamaño: ["mediano"], forma: ["redondo"], color: ["blanco"], textura: ["áspero"] },
+    flor: ["blanca"]
   })
 };
 
