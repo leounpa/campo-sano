@@ -11,6 +11,66 @@ const busqueda = $("#busqueda");
 let seccionActual = "inicio";
 let pilaNavegacion = [];
 
+// ---------- Instalar la app (PWA) ----------
+let eventoInstalar = null;
+
+function esIOS() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+function dibujarBotonInstalar() {
+  const cont = $("#contenedor-instalar");
+  if (!cont) return;
+  if (window.matchMedia("(display-mode: standalone)").matches) { cont.innerHTML = ""; return; }
+  if (esIOS()) {
+    cont.innerHTML = `<button class="boton-grande boton-instalar" onclick="instruccionesInstalar()"><span class="emoji">📲</span>Instalar la app en mi celular<span class="desc">Para usarla como una app normal</span></button>`;
+  } else if (eventoInstalar) {
+    cont.innerHTML = `<button class="boton-grande boton-instalar" onclick="instalarApp()"><span class="emoji">📲</span>Instalar la app en mi celular<span class="desc">Se agrega al inicio con el icono 🌱</span></button>`;
+  } else {
+    cont.innerHTML = "";
+  }
+}
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  eventoInstalar = e;
+  dibujarBotonInstalar();
+});
+
+window.addEventListener("appinstalled", () => {
+  eventoInstalar = null;
+  const cont = $("#contenedor-instalar");
+  if (cont) cont.innerHTML = "";
+});
+
+function instalarApp() {
+  if (!eventoInstalar) return;
+  eventoInstalar.prompt();
+  eventoInstalar.userChoice.then((eleccion) => {
+    if (eleccion.outcome === "accepted") {
+      const cont = $("#contenedor-instalar");
+      if (cont) cont.innerHTML = "";
+    }
+    eventoInstalar = null;
+  });
+}
+
+function instruccionesInstalar() {
+  const cont = $("#contenedor-instalar");
+  if (!cont) return;
+  cont.innerHTML = `
+    <div class="tarjeta" style="text-align:left">
+      <b>📲 Para instalar la app en tu celular:</b>
+      <ol class="lista" style="margin-top:6px">
+        <li>Pulsa el botón de <b>Compartir</b> en el navegador <span style="font-size:1.2em">⎋</span>.</li>
+        <li>Busca y elige <b>“Añadir a la pantalla de inicio”</b> (o “Agregar a inicio”).</li>
+        <li>Confirma con <b>Agregar</b> y listo: tendrás la app con su icono 🌱 en tu celular.</li>
+      </ol>
+    </div>`;
+}
+
+
 // ---------- Síntomas comunes para el diagnóstico ----------
 const SINTOMAS_COMUNES = [
   { id: "agujeros", texto: "Agujeros en las hojas", claves: ["agujeros", "rasgadas", "hojas comidas", "cogollo", "excremento"] },
@@ -151,6 +211,7 @@ function verInicio() {
       <button class="boton-grande" onclick="irA('soluciones')"><span class="emoji">🌿</span>Natural</button>
       <button class="boton-grande" onclick="irA('quimicos')"><span class="emoji">⚠️</span>Químicos</button>
     </div>
+    <div id="contenedor-instalar"></div>
     <div class="tarjeta">
       <h2>💡 ¿Cómo usar esta app?</h2>
       <ul class="lista">
@@ -164,6 +225,7 @@ function verInicio() {
     <div class="aviso">
       <b>Importante:</b> esta app es una guía de apoyo. Si el daño es muy grave o no estás seguro, consulta a un agrónomo o técnico de tu zona.
     </div>`;
+  dibujarBotonInstalar();
 }
 
 function verCultivos() {

@@ -139,6 +139,21 @@ body {
   color: #557055;
 }
 
+.boton-instalar {
+  background: #1a6b30;
+  border-color: #145a27;
+  color: #fff;
+  text-align: center;
+}
+
+.boton-instalar .desc {
+  color: #cfe8c8;
+}
+
+#contenedor-instalar {
+  text-align: center;
+}
+
 .menu-inicio {
   display: grid;
   grid-template-columns: 1fr 1fr;
