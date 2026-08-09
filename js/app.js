@@ -97,6 +97,11 @@ function esc(texto) {
   return div.innerHTML;
 }
 
+// Escapa comillas para usarlas dentro de onclick="..."
+function q(s) {
+  return String(s).replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+}
+
 function listar(arr) {
   return arr.map((i) => "<li>" + esc(i) + "</li>").join("");
 }
@@ -352,10 +357,11 @@ function verIdentificar() {
       <div class="tarjeta" style="text-align:center">
         <div style="font-size:2.5rem">🔎🌱</div>
         <h2>¿Qué planta es?</h2>
-        <p>Reconocida cualquier planta del mundo (cultivos, flores, árboles, malezas...) mirando sus hojas, tallo, frutos y flores. Funciona sin internet.</p>
+        <p>Tómale una foto y la app la <b>identifica sola</b> con inteligencia artificial e internet: te dice qué planta es y muestra su información. Sin internet puedes guiarte marcando lo que ves.</p>
       </div>
-      <div class="aviso"><b>¿Cómo funciona?</b> Primero puedes tomarle una foto para tenerla de guía, y luego respondes 3 preguntas fáciles sobre lo que ves.</div>
+      ${htmlEstadoIA()}
       <button class="boton-grande" onclick="abrirCamara()"><span class="emoji">📷</span>Tomar foto de la planta</button>
+      <button class="boton-grande" onclick="elegirFotoGaleria()"><span class="emoji">🖼️</span>Elegir foto de la galería</button>
       <button class="boton-grande" onclick="iniciarIdentificacion()"><span class="emoji">✋</span>No tengo foto, guíame con lo que veo</button>`;
 
     const descubrimientos = obtenerDescubrimientos();
@@ -660,6 +666,269 @@ function infoOnline(id) {
     });
 }
 
+// ---------- Identificación automática con IA (por foto) ----------
+const CLAVE_ID_IA = "campo-sano-clave-ia";
+const MODELOS_IA = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+const PROMPT_IDENTIFICA = `Eres un ingeniero agrónomo experto en botánica. Observa con detalle la foto de la planta y responde SOLO con un objeto JSON válido, sin texto antes ni después, con exactamente estas claves:
+{"nombre_comun":"nombre común en español","nombre_cientifico":"nombre científico","familia":"familia botánica","tipo":"arbol|arbusto|hierba|rastrera|palmera","descripcion":"2 oraciones para reconocerla por sus hojas/tallo/flores","usos":["uso 1","uso 2","uso 3"],"cuidados":"una frase sobre luz, riego y suelo"}
+Si no puedes identificarla con seguridad, responde {"nombre_comun":"No identificada","nombre_cientifico":"","familia":"","tipo":"","descripcion":"No estoy seguro de qué planta es.","usos":[],"cuidados":""}`;
+
+function obtenerClaveIA() {
+  try { return localStorage.getItem(CLAVE_ID_IA) || ""; } catch (e) { return ""; }
+}
+
+function htmlEstadoIA() {
+  const clave = obtenerClaveIA();
+  if (clave) {
+    return `<div class="tarjeta" style="border-left-color:#2e7d32">
+      <b>🤖 Identificación automática: activada</b>
+      <p class="texto-chico">Toma la foto y la app identificará la planta sola y mostrará su información.</p>
+      <button class="opcion-diag" onclick="abrirConfigIA()">⚙️ Cambiar clave</button>
+    </div>`;
+  }
+  return `<div class="tarjeta" style="border-left-color:#ef6c00">
+    <b>🤖 Identificación automática por foto</b>
+    <p class="texto-chico">Actívala para que al tomar la foto la app identifique la planta <b>sola</b> con inteligencia artificial e internet. Es gratis y toma 1 minuto.</p>
+    <button class="opcion-diag" onclick="abrirConfigIA()">⚙️ Activar (gratis)</button>
+  </div>`;
+}
+
+function abrirConfigIA() {
+  titulo.textContent = "Identificación automática";
+  btnAtras.classList.add("oculto");
+  const clave = obtenerClaveIA();
+  contenido.innerHTML = `
+    <div class="tarjeta">
+      <h2>🤖 Identificación automática por foto</h2>
+      <p>Para que la app identifique la planta <b>sola</b> al tomar la foto (con datos de internet), necesitas una <b>clave gratuita de Google</b>:</p>
+      <ol class="lista">
+        <li>Entra a <a class="enlace" target="_blank" rel="noopener" href="https://aistudio.google.com/apikey">aistudio.google.com/apikey</a> con tu cuenta de Google.</li>
+        <li>Pulsa <b>Crear clave de API</b> y cópiala (empieza por <b>AIza…</b>).</li>
+        <li>Pégala aquí abajo y pulsa Guardar.</li>
+      </ol>
+      <input id="clave-ia" class="entrada" type="text" placeholder="Pega tu clave aquí (AIza...)" value="${esc(clave)}">
+      <p id="clave-ia-error" class="texto-chico" style="color:#c62828"></p>
+      <button class="boton-grande" onclick="guardarConfigIA()">💾 Guardar</button>
+      ${clave ? `<button class="opcion-diag" onclick="borrarConfigIA()">🗑️ Quitar clave</button>` : ""}
+      <button class="opcion-diag" onclick="verIdentificar()">↩️ Volver</button>
+    </div>
+    <div class="aviso"><b>Nota:</b> la clave se guarda solo en tu teléfono. No compartas el enlace público de la app para que nadie use tu clave.</div>`;
+}
+
+function guardarConfigIA() {
+  const v = $("#clave-ia").value.trim();
+  const err = $("#clave-ia-error");
+  if (!v) { err.textContent = "Pega la clave antes de guardar."; return; }
+  if (!/^AIza/i.test(v)) { err.textContent = "La clave de Google empieza con 'AIza'. Revisa que la hayas copiado bien."; return; }
+  localStorage.setItem(CLAVE_ID_IA, v);
+  verIdentificar();
+}
+
+function borrarConfigIA() {
+  localStorage.removeItem(CLAVE_ID_IA);
+  verIdentificar();
+}
+
+function elegirFotoGaleria() {
+  const inp = document.createElement("input");
+  inp.type = "file";
+  inp.accept = "image/*";
+  inp.style.display = "none";
+  document.body.appendChild(inp);
+  inp.addEventListener("change", () => {
+    const archivo = inp.files && inp.files[0];
+    if (!archivo) { inp.remove(); return; }
+    const lector = new FileReader();
+    lector.onload = () => {
+      identEstado.foto = lector.result;
+      inp.remove();
+      if (obtenerClaveIA()) {
+        identificarConIA();
+      } else {
+        titulo.textContent = "Identificar";
+        contenido.innerHTML = `
+          <div class="tarjeta" style="text-align:center">
+            <img src="${identEstado.foto}" alt="Foto de la planta" style="max-width:100%;max-height:200px;border-radius:10px">
+            <p style="margin-top:8px">Para que la app <b>identifique la planta sola</b>, activa la identificación automática (gratis, 1 minuto):</p>
+            <button class="boton-grande" onclick="abrirConfigIA()">⚙️ Activar identificación automática</button>
+            <p class="texto-chico">o</p>
+            <button class="opcion-diag" onclick="iniciarIdentificacion()">✋ Guiarme con lo que veo (sin internet)</button>
+            <button class="opcion-diag" onclick="verIdentificar()">↩️ Volver</button>
+          </div>`;
+      }
+    };
+    lector.readAsDataURL(archivo);
+  });
+  inp.click();
+}
+
+async function identificarConIA() {
+  const clave = obtenerClaveIA();
+  if (!clave || !identEstado.foto) { iniciarIdentificacion(); return; }
+  titulo.textContent = "Identificando…";
+  btnAtras.classList.add("oculto");
+  contenido.innerHTML = `
+    <div class="tarjeta" style="text-align:center">
+      <div style="font-size:2.5rem">🤖</div>
+      <p><b>Analizando tu foto con inteligencia artificial…</b></p>
+      <p class="texto-chico">Identificando la planta y buscando su información. Esto toma unos segundos.</p>
+    </div>`;
+  const base64 = (identEstado.foto.split(",")[1] || identEstado.foto).replace(/\s+/g, "");
+  let ultimo = null;
+  for (const modelo of MODELOS_IA) {
+    try {
+      const url = "https://generativelanguage.googleapis.com/v1beta/models/" + modelo + ":generateContent?key=" + encodeURIComponent(clave);
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [
+            { inline_data: { mime_type: "image/jpeg", data: base64 } },
+            { text: PROMPT_IDENTIFICA }
+          ] }],
+          generationConfig: { temperature: 0.2, maxOutputTokens: 900 }
+        })
+      });
+      if (!resp.ok) {
+        const errJson = await resp.json().catch(() => null);
+        const msg = errJson && errJson.error && errJson.error.message ? errJson.error.message : "Error " + resp.status;
+        ultimo = msg;
+        if (/model|not found|not exist|does not exist/i.test(msg)) continue;
+        break;
+      }
+      const datos = await resp.json();
+      const texto = (datos.candidates && datos.candidates[0] && datos.candidates[0].content && datos.candidates[0].content.parts)
+        ? datos.candidates[0].content.parts.map((p) => p.text || "").join("")
+        : "";
+      renderResultadoIA(texto);
+      return;
+    } catch (e) {
+      ultimo = e && e.message ? e.message : "Error de conexión. Revisa tu internet.";
+      break;
+    }
+  }
+  contenido.innerHTML = `
+    <div class="tarjeta">
+      <h2>No se pudo identificar automáticamente</h2>
+      <p class="texto-chico">${esc(ultimo || "Error")}</p>
+      <p class="texto-chico">Sugerencias: revisa que tengas internet y que la clave sea correcta y esté activada.</p>
+      <button class="boton-grande" onclick="abrirConfigIA()">⚙️ Revisar la clave</button>
+      <button class="opcion-diag" onclick="iniciarIdentificacion()">✋ Guiarme con lo que veo (sin internet)</button>
+      <button class="opcion-diag" onclick="abrirCamara()">📷 Tomar otra foto</button>
+      <button class="opcion-diag" onclick="verIdentificar()">↩️ Volver</button>
+    </div>`;
+}
+
+function emparejarPlantaIA(ia) {
+  const nombres = [ia.nombre_comun, ia.nombre_cientifico].filter(Boolean).map((n) => n.toLowerCase().trim());
+  const matcher = (c) => {
+    const cand = [c.nombre, c.cientifico].filter(Boolean).map((n) => n.toLowerCase().trim());
+    return nombres.some((n) => cand.some((c2) => c2 === n || (n.length > 3 && c2.length > 3 && (c2.includes(n) || n.includes(c2)))));
+  };
+  let c = CULTIVOS.find(matcher);
+  if (c) return { c, esCultivo: true };
+  c = PLANTAS_GENERALES.find(matcher);
+  if (c) return { c, esCultivo: false };
+  return null;
+}
+
+function renderResultadoIA(texto) {
+  let ia = null;
+  try {
+    let limpio = String(texto || "").replace(/```[a-zA-Z]*\n?/g, "").replace(/```/g, "").trim();
+    const ini = limpio.indexOf("{");
+    const fin = limpio.lastIndexOf("}");
+    if (ini >= 0 && fin > ini) ia = JSON.parse(limpio.slice(ini, fin + 1));
+  } catch (e) { ia = null; }
+
+  const noIdentificada = !ia || !ia.nombre_comun || /no identific/i.test(ia.nombre_comun);
+  if (noIdentificada) {
+    contenido.innerHTML = `
+      <div class="tarjeta">
+        <h2>No se pudo identificar</h2>
+        <p class="texto-chico">La inteligencia artificial no reconoció la planta con seguridad. Prueba con una foto más nítida, de cerca y con buena luz.</p>
+        <button class="opcion-diag" onclick="abrirCamara()">📷 Tomar otra foto</button>
+        <button class="opcion-diag" onclick="iniciarIdentificacion()">✋ Guiarme con lo que veo</button>
+        <button class="opcion-diag" onclick="verIdentificar()">↩️ Volver a empezar</button>
+      </div>`;
+    return;
+  }
+
+  const local = emparejarPlantaIA(ia);
+  const nombreFinal = local ? local.c.nombre : (ia.nombre_comun || "Planta");
+  const cientFinal = local && local.c.cientifico ? local.c.cientifico : (ia.nombre_cientifico || "");
+  titulo.textContent = "🌿 " + nombreFinal;
+  btnAtras.classList.add("oculto");
+
+  let html = `<div class="detalle">`;
+  if (identEstado.foto) html += `<div class="tarjeta" style="text-align:center"><img src="${identEstado.foto}" alt="Foto de la planta" style="max-width:100%;max-height:200px;border-radius:10px"></div>`;
+  html += `<div class="tarjeta">
+    <h2>${esc(nombreFinal)}</h2>
+    ${cientFinal ? `<p><b>Nombre científico:</b> <i>${esc(cientFinal)}</i></p>` : ""}
+    ${ia.familia ? `<p><b>Familia:</b> ${esc(ia.familia)}</p>` : ""}
+    ${ia.tipo ? `<p><b>Tipo:</b> ${esc(nombreTipo(ia.tipo))}</p>` : ""}
+    ${ia.descripcion ? `<p>${esc(ia.descripcion)}</p>` : ""}
+    ${ia.usos && ia.usos.length ? `<div class="seccion-titulo">🪴 Usos</div><ul class="lista">${listar(ia.usos)}</ul>` : ""}
+    ${ia.cuidados ? `<div class="seccion-titulo">💧 Cuidados</div><p>${esc(ia.cuidados)}</p>` : ""}
+  </div>`;
+
+  if (local) {
+    if (local.esCultivo) {
+      html += `<button class="boton-grande" onclick="abrirDetalleCultivo('${q(local.c.id)}')"><span class="emoji">📖</span>Ver guía de siembra en Campo Sano</button>`;
+    } else {
+      const c = local.c;
+      html += `<div class="tarjeta"><p><b>Familia:</b> ${esc(c.familia || "")}</p>${c.origen ? `<p><b>Origen:</b> ${esc(c.origen)}</p>` : ""}${c.descripcion ? `<p>${esc(c.descripcion)}</p>` : ""}</div>`;
+      html += `<button class="boton-grande" onclick="infoOnline('${q(c.id)}')"><span class="emoji">🌐</span>Ver información en internet</button>
+        <div id="info-online-${q(c.id)}"></div>`;
+    }
+  } else {
+    const nombreWeb = ia.nombre_cientifico || ia.nombre_comun;
+    html += `<div class="tarjeta">
+      <button class="opcion-diag" onclick="infoOnlineNombre('${q(nombreWeb)}')">🌐 Ver información de <b>${esc(nombreWeb)}</b> en internet</button>
+      <div id="info-online-ia"></div>
+    </div>`;
+  }
+
+  html += `<div class="tarjeta">
+    <button class="opcion-diag" onclick="abrirCamara()">📷 Tomar otra foto</button>
+    <button class="opcion-diag" onclick="iniciarIdentificacion()">✋ ¿No es esta? Guiarme con lo que veo</button>
+    <button class="opcion-diag" onclick="identEstado = { paso: 0, tipo: '', parte: '', foto: null, sel: {} }; verIdentificar();">🔄 Empezar de nuevo</button>
+  </div>`;
+  html += `</div>`;
+  contenido.innerHTML = html;
+}
+
+function infoOnlineNombre(nombre) {
+  const cont = $("#info-online-ia");
+  if (!cont) return;
+  if (cont.dataset.abierto === "1") { cont.innerHTML = ""; cont.dataset.abierto = ""; return; }
+  cont.dataset.abierto = "1";
+  if (!navigator.onLine) {
+    cont.innerHTML = `<p class="texto-chico">📴 Sin conexión a internet. Conéctate para ver la información de <b>${esc(nombre)}</b>.</p>`;
+    return;
+  }
+  cont.innerHTML = `<p class="texto-chico">🌐 Buscando información de <b>${esc(nombre)}</b>...</p>`;
+  const pedirWiki = (titulo) =>
+    fetch("https://es.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=1&explaintext=1&redirects=1&origin=*&titles=" + encodeURIComponent(titulo))
+      .then((r) => r.json());
+  pedirWiki(nombre)
+    .then((data) => {
+      const pages = data.query && data.query.pages ? Object.values(data.query.pages) : [];
+      const page = pages.find((p) => p.extract);
+      if (page && page.extract) {
+        cont.innerHTML = `<p class="texto-chico" style="margin-bottom:4px">🌐 Información de Wikipedia:</p>
+          <b>${esc(page.title)}</b>
+          <p>${esc(recortar(page.extract, 700))}</p>
+          <a class="enlace" target="_blank" rel="noopener" href="https://es.wikipedia.org/wiki/${encodeURIComponent(page.title.replace(/ /g, "_"))}">Abrir página completa en Wikipedia →</a>`;
+      } else {
+        cont.innerHTML = `Sin artículo en Wikipedia de <b>${esc(nombre)}</b>. <a class="enlace" target="_blank" rel="noopener" href="https://www.google.com/search?q=${encodeURIComponent(nombre)}">Buscar en Google →</a>`;
+      }
+    })
+    .catch(() => {
+      cont.innerHTML = `No pudimos consultar internet ahora. <a class="enlace" target="_blank" rel="noopener" href="https://www.google.com/search?q=${encodeURIComponent(nombre)}">Buscar en Google →</a>`;
+    });
+}
+
 // ---------- Cámara ----------
 let streamCamara = null;
 let videoElemento = null;
@@ -699,7 +968,20 @@ function capturarFoto() {
   ctx.drawImage(videoElemento, 0, 0, canvas.width, canvas.height);
   identEstado.foto = canvas.toDataURL("image/jpeg", 0.7);
   detenerCamara();
-  iniciarIdentificacion();
+  if (obtenerClaveIA()) {
+    identificarConIA();
+  } else {
+    titulo.textContent = "Identificar";
+    contenido.innerHTML = `
+      <div class="tarjeta" style="text-align:center">
+        <img src="${identEstado.foto}" alt="Foto de la planta" style="max-width:100%;max-height:200px;border-radius:10px">
+        <p style="margin-top:8px">Para que la app <b>identifique la planta sola</b> al tomar la foto, activa la identificación automática (gratis, 1 minuto):</p>
+        <button class="boton-grande" onclick="abrirConfigIA()">⚙️ Activar identificación automática</button>
+        <p class="texto-chico">o</p>
+        <button class="opcion-diag" onclick="iniciarIdentificacion()">✋ Guiarme con lo que veo (sin internet)</button>
+        <button class="opcion-diag" onclick="verIdentificar()">↩️ Volver</button>
+      </div>`;
+  }
 }
 
 function detenerCamara() {
