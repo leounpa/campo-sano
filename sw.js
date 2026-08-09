@@ -1,5 +1,5 @@
 // Campo Sano - Service worker para funcionar sin internet
-const CACHE = "campo-sano-v8";
+const CACHE = "campo-sano-v9";
 
 const ARCHIVOS = [
   "./",

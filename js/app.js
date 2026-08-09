@@ -667,14 +667,22 @@ function infoOnline(id) {
 }
 
 // ---------- Identificación automática con IA (por foto) ----------
+// Pega aquí tu clave de Google (una sola vez). Con esto la app identifica
+// automáticamente para TODOS los usuarios: nadie necesita configurar nada.
+// Créala gratis en https://aistudio.google.com/apikey (empieza por AIza).
+const CLAVE_IA_POR_DEFECTO = "AQ.Ab8RN6Is9JjU4IxIV-m0gc-56QokOVjKePI8QnZoXg6-myYw1A";
 const CLAVE_ID_IA = "campo-sano-clave-ia";
-const MODELOS_IA = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+const MODELOS_IA = ["gemini-3.5-flash", "gemini-2.0-flash", "gemini-2.5-flash-lite"];
 const PROMPT_IDENTIFICA = `Eres un ingeniero agrónomo experto en botánica. Observa con detalle la foto de la planta y responde SOLO con un objeto JSON válido, sin texto antes ni después, con exactamente estas claves:
 {"nombre_comun":"nombre común en español","nombre_cientifico":"nombre científico","familia":"familia botánica","tipo":"arbol|arbusto|hierba|rastrera|palmera","descripcion":"2 oraciones para reconocerla por sus hojas/tallo/flores","usos":["uso 1","uso 2","uso 3"],"cuidados":"una frase sobre luz, riego y suelo"}
 Si no puedes identificarla con seguridad, responde {"nombre_comun":"No identificada","nombre_cientifico":"","familia":"","tipo":"","descripcion":"No estoy seguro de qué planta es.","usos":[],"cuidados":""}`;
 
 function obtenerClaveIA() {
-  try { return localStorage.getItem(CLAVE_ID_IA) || ""; } catch (e) { return ""; }
+  try { return localStorage.getItem(CLAVE_ID_IA) || CLAVE_IA_POR_DEFECTO || ""; } catch (e) { return CLAVE_IA_POR_DEFECTO || ""; }
+}
+
+function tieneClavePropia() {
+  try { return !!localStorage.getItem(CLAVE_ID_IA); } catch (e) { return false; }
 }
 
 function htmlEstadoIA() {
@@ -683,7 +691,7 @@ function htmlEstadoIA() {
     return `<div class="tarjeta" style="border-left-color:#2e7d32">
       <b>🤖 Identificación automática: activada</b>
       <p class="texto-chico">Toma la foto y la app identificará la planta sola y mostrará su información.</p>
-      <button class="opcion-diag" onclick="abrirConfigIA()">⚙️ Cambiar clave</button>
+      <button class="opcion-diag" onclick="abrirConfigIA()">⚙️ Ver detalle</button>
     </div>`;
   }
   return `<div class="tarjeta" style="border-left-color:#ef6c00">
@@ -696,23 +704,32 @@ function htmlEstadoIA() {
 function abrirConfigIA() {
   titulo.textContent = "Identificación automática";
   btnAtras.classList.add("oculto");
-  const clave = obtenerClaveIA();
+  const propia = tieneClavePropia();
+  const integrada = !!CLAVE_IA_POR_DEFECTO;
   contenido.innerHTML = `
     <div class="tarjeta">
       <h2>🤖 Identificación automática por foto</h2>
-      <p>Para que la app identifique la planta <b>sola</b> al tomar la foto (con datos de internet), necesitas una <b>clave gratuita de Google</b>:</p>
-      <ol class="lista">
-        <li>Entra a <a class="enlace" target="_blank" rel="noopener" href="https://aistudio.google.com/apikey">aistudio.google.com/apikey</a> con tu cuenta de Google.</li>
-        <li>Pulsa <b>Crear clave de API</b> y cópiala (empieza por <b>AIza…</b>).</li>
-        <li>Pégala aquí abajo y pulsa Guardar.</li>
-      </ol>
-      <input id="clave-ia" class="entrada" type="text" placeholder="Pega tu clave aquí (AIza...)" value="${esc(clave)}">
-      <p id="clave-ia-error" class="texto-chico" style="color:#c62828"></p>
-      <button class="boton-grande" onclick="guardarConfigIA()">💾 Guardar</button>
-      ${clave ? `<button class="opcion-diag" onclick="borrarConfigIA()">🗑️ Quitar clave</button>` : ""}
+      <p>La app ya trae la clave incorporada y funciona sola: al tomar una foto identifica la planta automáticamente.</p>
+      ${integrada
+        ? `<p class="texto-chico" style="color:#2e7d32"><b>Estado:</b> automática activada ✅</p>`
+        : `<p class="texto-chico">No se encontró clave incorporada. Si eres el dueño de la app, añádela una sola vez en el archivo <b>js/app.js</b> (línea CLAVE_IA_POR_DEFECTO) y todos los usuarios la tendrán.</p>`}
+      ${propia
+        ? `<p class="texto-chico">Tienes una clave propia guardada en este teléfono. Puedes cambiarla o quitarla:</p>
+          <input id="clave-ia" class="entrada" type="text" placeholder="Pega tu clave aquí (AIza...)" value="${esc(obtenerClaveIA())}">
+          <p id="clave-ia-error" class="texto-chico" style="color:#c62828"></p>
+          <button class="boton-grande" onclick="guardarConfigIA()">💾 Guardar mi clave</button>
+          <button class="opcion-diag" onclick="borrarConfigIA()">🗑️ Quitar mi clave (volver a la de la app)</button>`
+        : `<p class="texto-chico" style="margin-top:6px">Si quieres usar tu propia clave en lugar de la de la app:</p>
+          <ol class="lista">
+            <li>Entra a <a class="enlace" target="_blank" rel="noopener" href="https://aistudio.google.com/apikey">aistudio.google.com/apikey</a> con tu cuenta de Google.</li>
+            <li>Pulsa <b>Crear clave de API</b> y cópiala (empieza por <b>AIza…</b>).</li>
+            <li>Pégala aquí abajo y pulsa Guardar.</li>
+          </ol>
+          <input id="clave-ia" class="entrada" type="text" placeholder="Pega tu clave aquí (AIza...)">
+          <p id="clave-ia-error" class="texto-chico" style="color:#c62828"></p>
+          <button class="boton-grande" onclick="guardarConfigIA()">💾 Guardar mi clave</button>`}
       <button class="opcion-diag" onclick="verIdentificar()">↩️ Volver</button>
-    </div>
-    <div class="aviso"><b>Nota:</b> la clave se guarda solo en tu teléfono. No compartas el enlace público de la app para que nadie use tu clave.</div>`;
+    </div>`;
 }
 
 function guardarConfigIA() {
@@ -742,20 +759,7 @@ function elegirFotoGaleria() {
     lector.onload = () => {
       identEstado.foto = lector.result;
       inp.remove();
-      if (obtenerClaveIA()) {
-        identificarConIA();
-      } else {
-        titulo.textContent = "Identificar";
-        contenido.innerHTML = `
-          <div class="tarjeta" style="text-align:center">
-            <img src="${identEstado.foto}" alt="Foto de la planta" style="max-width:100%;max-height:200px;border-radius:10px">
-            <p style="margin-top:8px">Para que la app <b>identifique la planta sola</b>, activa la identificación automática (gratis, 1 minuto):</p>
-            <button class="boton-grande" onclick="abrirConfigIA()">⚙️ Activar identificación automática</button>
-            <p class="texto-chico">o</p>
-            <button class="opcion-diag" onclick="iniciarIdentificacion()">✋ Guiarme con lo que veo (sin internet)</button>
-            <button class="opcion-diag" onclick="verIdentificar()">↩️ Volver</button>
-          </div>`;
-      }
+      identificarConIA();
     };
     lector.readAsDataURL(archivo);
   });
@@ -968,20 +972,7 @@ function capturarFoto() {
   ctx.drawImage(videoElemento, 0, 0, canvas.width, canvas.height);
   identEstado.foto = canvas.toDataURL("image/jpeg", 0.7);
   detenerCamara();
-  if (obtenerClaveIA()) {
-    identificarConIA();
-  } else {
-    titulo.textContent = "Identificar";
-    contenido.innerHTML = `
-      <div class="tarjeta" style="text-align:center">
-        <img src="${identEstado.foto}" alt="Foto de la planta" style="max-width:100%;max-height:200px;border-radius:10px">
-        <p style="margin-top:8px">Para que la app <b>identifique la planta sola</b> al tomar la foto, activa la identificación automática (gratis, 1 minuto):</p>
-        <button class="boton-grande" onclick="abrirConfigIA()">⚙️ Activar identificación automática</button>
-        <p class="texto-chico">o</p>
-        <button class="opcion-diag" onclick="iniciarIdentificacion()">✋ Guiarme con lo que veo (sin internet)</button>
-        <button class="opcion-diag" onclick="verIdentificar()">↩️ Volver</button>
-      </div>`;
-  }
+  identificarConIA();
 }
 
 function detenerCamara() {
