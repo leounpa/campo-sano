@@ -124,7 +124,9 @@ function irA(seccion, estado) {
     identificar: verIdentificar,
     diagnostico: verDiagnostico,
     soluciones: verSoluciones,
-    quimicos: verQuimicos
+    quimicos: verQuimicos,
+    tecnico: verTecnico,
+    regional: verRegional
   };
   (vistas[seccion] || verInicio)(estado);
 }
@@ -152,6 +154,18 @@ function abrirDetalleCultivo(id) {
         <h2>📋 Cuidados paso a paso</h2>
         <ul class="lista">${listar(c.cuidados)}</ul>
       </div>
+      ${typeof TECNICO !== "undefined" && TECNICO[c.id] ? `
+      <div class="tarjeta ficha-tecnica">
+        <h2>🧑‍🌾 Ficha técnica (para producir en serio)</h2>
+        <p><b>⛰️ Altitud:</b> ${esc(TECNICO[c.id].altitud)}</p>
+        <p><b>🌡️ Clima:</b> ${esc(TECNICO[c.id].clima)}</p>
+        <p><b>🪨 Suelo:</b> ${esc(TECNICO[c.id].suelo)}</p>
+        <p><b>📏 Siembra:</b> ${esc(TECNICO[c.id].densidad)}</p>
+        <p><b>⚖️ Rendimiento:</b> ${esc(TECNICO[c.id].rendimiento)}</p>
+        <p><b>💰 Costo estimado:</b> ${esc(TECNICO[c.id].costos)}</p>
+        <p><b>🛒 Mercado:</b> ${esc(TECNICO[c.id].mercado)}</p>
+        <button class="boton-grande" onclick="abrirDetalleTecnico('${c.id}')"><span class="emoji">📈</span>Ver fases del cultivo, riesgos y claves</button>
+      </div>` : ""}
       <div class="tarjeta">
         <h2>🐛 Problemas comunes en este cultivo</h2>
         ${c.plagas.map((id) => {
@@ -215,6 +229,9 @@ function verInicio() {
       <button class="boton-grande" onclick="irA('diagnostico')"><span class="emoji">🔍</span>Diagnóstico</button>
       <button class="boton-grande" onclick="irA('soluciones')"><span class="emoji">🌿</span>Natural</button>
       <button class="boton-grande" onclick="irA('quimicos')"><span class="emoji">⚠️</span>Químicos</button>
+      <button class="boton-grande" onclick="irA('tecnico')"><span class="emoji">📈</span>Fichas técnicas</button>
+      <button class="boton-grande" onclick="irA('regional')"><span class="emoji">🗺️</span>Mi zona</button>
+      <button class="boton-grande" onclick="irA('cultivos')"><span class="emoji">🌿</span>Plantas medicinales</button>
     </div>
     <div id="contenedor-instalar"></div>
     <div class="tarjeta">
@@ -225,7 +242,10 @@ function verInicio() {
         <li><b>🔍 Diagnóstico:</b> cuéntanos qué le pasa a tu planta y te decimos qué puede ser.</li>
         <li><b>🌿 Natural:</b> remedios caseros y ecológicos para plagas.</li>
         <li><b>⚠️ Químicos:</b> información de agroquímicos, solo para casos graves.</li>
+        <li><b>📈 Fichas técnicas:</b> altitud, densidad de siembra, rendimiento por hectárea, fases del cultivo y costos. Para producir en serio.</li>
+        <li><b>🗺️ Mi zona:</b> dónde estás y qué se cultiva en tu corregimiento. Datos de la Alcaldía de Cali.</li>
       </ul>
+      <div class="aviso"><b>📴 Funciona sin internet.</b> Toda la información queda guardada en el teléfono. Solo la identificación por foto con IA necesita conexión.</div>
     </div>
     <div class="aviso">
       <b>Importante:</b> esta app es una guía de apoyo. Si el daño es muy grave o no estás seguro, consulta a un agrónomo o técnico de tu zona.
@@ -240,6 +260,115 @@ function verCultivos() {
     <div class="tarjeta"><p>Elige tu cultivo para ver cómo sembrarlo, cuidarlo y cuándo cosechar.</p></div>
     <div class="lista-items">
       ${CULTIVOS.map((c) => `<button class="item" onclick="abrirDetalleCultivo('${c.id}')"><span class="emoji">${c.emoji}</span><span class="nombre">${esc(c.nombre)}</span></button>`).join("")}
+    </div>
+    <button class="boton-grande" onclick="irA('tecnico')"><span class="emoji">📈</span>Ver fichas técnicas de producción<br><span class="desc">Altitud, rendimiento, fases y costos</span></button>`;
+}
+
+// ---------- Fichas técnicas de producción ----------
+
+function verTecnico() {
+  titulo.textContent = "Fichas técnicas";
+  btnAtras.classList.add("oculto");
+  const conFicha = typeof TECNICO !== "undefined"
+    ? Object.keys(TECNICO).map((id) => obtenerCultivo(id)).filter(Boolean)
+    : [];
+  const resumen = typeof RESUMEN !== "undefined"
+    ? Object.keys(RESUMEN).map((id) => ({ cult: obtenerCultivo(id), r: RESUMEN[id] })).filter((x) => x.cult)
+    : [];
+  contenido.innerHTML = `
+    <div class="tarjeta">
+      <p>Información para producir en serio: altitud, densidad de siembra, rendimiento por hectárea, fases del cultivo y costos.</p>
+      <p class="texto-chico"><b>Importante:</b> rendimientos y costos son rangos de referencia, no un presupuesto. Confirma con tu técnico y con Finagro antes de invertir.</p>
+    </div>
+    <div class="tarjeta">
+      <div class="seccion-titulo">📈 Con ficha completa (${conFicha.length})</div>
+      <div class="lista-items">
+        ${conFicha.map((c) => `<button class="item" onclick="abrirDetalleTecnico('${c.id}')"><span class="emoji">${c.emoji}</span><span class="nombre">${esc(c.nombre)}</span><span class="texto-chico">${esc(TECNICO[c.id].rendimiento)}</span></button>`).join("")}
+      </div>
+    </div>
+    ${resumen.length ? `
+    <div class="tarjeta">
+      <div class="seccion-titulo">📋 Resumen rápido (${resumen.length})</div>
+      <p class="texto-chico">Solo altitud y rendimiento, para descartar rápido en la visita de campo.</p>
+      ${resumen.map((x) => `<div class="fila-resumen"><b>${x.cult.emoji} ${esc(x.cult.nombre)}</b><br><span class="texto-chico">${esc(x.r[0])} · ${esc(x.r[1])}</span></div>`).join("")}
+    </div>` : ""}`;
+}
+
+function abrirDetalleTecnico(id) {
+  pilaNavegacion.push({ seccion: seccionActual });
+  const c = obtenerCultivo(id);
+  const t = typeof TECNICO !== "undefined" ? TECNICO[id] : null;
+  if (!t) return;
+  titulo.textContent = (c ? c.emoji + " " + c.nombre : "Ficha técnica");
+  btnAtras.classList.remove("oculto");
+  buscarOculto();
+  contenido.innerHTML = `
+    <div class="detalle">
+      <div class="tarjeta ficha-tecnica">
+        <p><b>⛰️ Altitud:</b> ${esc(t.altitud)}</p>
+        <p><b>🌡️ Clima:</b> ${esc(t.clima)}</p>
+        <p><b>🪨 Suelo:</b> ${esc(t.suelo)}</p>
+        <p><b>📏 Distancia y densidad:</b> ${esc(t.densidad)}</p>
+        <p><b>⚖️ Rendimiento por hectárea:</b> ${esc(t.rendimiento)}</p>
+        <p><b>💰 Costo estimado:</b> ${esc(t.costos)}</p>
+        <p><b>🛒 Mercado:</b> ${esc(t.mercado)}</p>
+      </div>
+      <div class="tarjeta">
+        <h2>🗓️ Fases del cultivo</h2>
+        ${(t.fases || []).map((f) => `<div class="fase"><div class="fase-titulo">${esc(f[0])}</div><div class="fase-cuando">${esc(f[1])}</div><div>${esc(f[2])}</div></div>`).join("")}
+      </div>
+      ${t.clave ? `<div class="tarjeta" style="border-left-color:#2e7d32"><h2>🔑 Clave del manejo</h2><p>${esc(t.clave)}</p></div>` : ""}
+      ${(t.riesgos || []).length ? `<div class="tarjeta"><div class="seccion-titulo">⚠️ Riesgos principales</div><ul class="lista">${listar(t.riesgos)}</ul></div>` : ""}
+      <div class="aviso"><b>Recuerda:</b> son rangos de referencia. El resultado real depende del suelo, el clima de tu lote y el manejo.</div>
+      ${c ? `<button class="boton-grande" onclick="abrirDetalleCultivo('${c.id}')"><span class="emoji">📖</span>Ver la guía sencilla de este cultivo</button>` : ""}
+    </div>`;
+}
+
+// ---------- Módulo regional ----------
+
+function verRegional() {
+  titulo.textContent = "Mi zona";
+  btnAtras.classList.add("oculto");
+  if (typeof REGIONAL === "undefined") { irA("inicio"); return; }
+  contenido.innerHTML = `
+    <div class="tarjeta">
+      <h2>🗺️ ${esc(REGIONAL.zona)}</h2>
+      <p>${esc(REGIONAL.nota)}</p>
+      <p class="texto-chico">Fuente: ${esc(REGIONAL.fuente)}</p>
+    </div>
+    <div class="tarjeta">
+      <div class="seccion-titulo">⛰️ Franjas por altitud</div>
+      ${REGIONAL.franjas.map((f) => `<div class="franja"><div class="franja-titulo">${esc(f.clave)} · ${esc(f.nombre)} <span class="texto-chico">(${esc(f.altitud)})</span></div><div>${esc(f.clima)}</div><div><b>Corregimientos:</b> ${esc(f.corregimientos)}</div><div class="texto-chico">${esc(f.consejo)}</div></div>`).join("")}
+    </div>
+    <div class="tarjeta">
+      <div class="seccion-titulo">📍 Los 15 corregimientos</div>
+      <p class="texto-chico">Toca uno para ver su altitud y qué se cultiva más allí.</p>
+      ${REGIONAL.corregimientos.map((c, i) => `<button class="opcion-diag" onclick="abrirDetalleCorregimiento(${i})"><b>${esc(c.nombre)}</b><br><span class="texto-chico">${c.altitudMin}-${c.altitudMax} m · franja ${esc(c.franja)} · ${c.diversidad} cultivos</span></button>`).join("")}
+    </div>`;
+}
+
+function abrirDetalleCorregimiento(idx) {
+  pilaNavegacion.push({ seccion: seccionActual });
+  const c = REGIONAL.corregimientos[idx];
+  if (!c) return;
+  titulo.textContent = c.nombre;
+  btnAtras.classList.remove("oculto");
+  buscarOculto();
+  const max = c.productos.length ? c.productos[0][1] : 1;
+  contenido.innerHTML = `
+    <div class="detalle">
+      <div class="tarjeta ficha-tecnica">
+        <p><b>⛰️ Altitud:</b> ${c.altitudMin} a ${c.altitudMax} m (franja ${esc(c.franja)})</p>
+        <p><b>🌿 Diversidad:</b> ${c.diversidad} cultivos distintos reportados</p>
+        <p>${esc(c.perfil)}</p>
+        ${c.productosSugeridos ? `<p><b>👉 Sugeridos:</b> ${esc(c.productosSugeridos)}</p>` : ""}
+      </div>
+      <div class="tarjeta">
+        <div class="seccion-titulo">🌱 Qué más se cultiva</div>
+        ${c.productos.map((p) => `<div class="fila-resumen"><b>${esc(p[0])}</b><div class="barra"><div class="barra-relleno" style="width:${Math.round((p[1] / max) * 100)}%"></div></div><span class="texto-chico">${p[1]}</span></div>`).join("")}
+        <p class="texto-chico">El número indica cuántas veredas reportaron el cultivo. No son hectáreas.</p>
+      </div>
+      <button class="boton-grande" onclick="irA('tecnico')"><span class="emoji">📈</span>Ver fichas técnicas de producción</button>
     </div>`;
 }
 
@@ -687,10 +816,16 @@ function tieneClavePropia() {
 
 function htmlEstadoIA() {
   const clave = obtenerClaveIA();
+  if (!hayConexion()) {
+    return `<div class="tarjeta" style="border-left-color:#ef6c00">
+      <b>🤖 Identificación automática: necesita internet</b>
+      <p class="texto-chico">Ahora estás sin conexión, así que la identificación por foto con IA no puede funcionar. Todo lo demás de la app sí funciona sin internet.</p>
+    </div>`;
+  }
   if (clave) {
     return `<div class="tarjeta" style="border-left-color:#2e7d32">
       <b>🤖 Identificación automática: activada</b>
-      <p class="texto-chico">Toma la foto y la app identificará la planta sola y mostrará su información.</p>
+      <p class="texto-chico">Toma la foto y la app identificará la planta sola y mostrará su información. Requiere internet.</p>
       <button class="opcion-diag" onclick="abrirConfigIA()">⚙️ Ver detalle</button>
     </div>`;
   }
@@ -1045,6 +1180,30 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./sw.js").catch(() => {});
   });
 }
+
+// ---------- Aviso de conexión ----------
+// Todo menos la identificación por foto con IA funciona sin internet.
+function hayConexion() {
+  return navigator.onLine !== false;
+}
+
+function actualizarAvisoOffline() {
+  const actual = document.getElementById("aviso-offline");
+  if (hayConexion()) {
+    if (actual) actual.remove();
+    return;
+  }
+  if (actual) return;
+  const aviso = document.createElement("div");
+  aviso.id = "aviso-offline";
+  aviso.className = "aviso-offline";
+  aviso.textContent = "📴 Sin internet. Puedes seguir usando la app con la información ya guardada.";
+  document.body.appendChild(aviso);
+}
+
+window.addEventListener("offline", actualizarAvisoOffline);
+window.addEventListener("online", actualizarAvisoOffline);
+actualizarAvisoOffline();
 
 // ---------- Arranque ----------
 irA("inicio");
