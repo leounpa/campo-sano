@@ -126,7 +126,9 @@ function irA(seccion, estado) {
     soluciones: verSoluciones,
     quimicos: verQuimicos,
     tecnico: verTecnico,
-    regional: verRegional
+    regional: verRegional,
+    registro: verRegistro,
+    resumen: verResumen
   };
   (vistas[seccion] || verInicio)(estado);
 }
@@ -231,7 +233,7 @@ function verInicio() {
       <button class="boton-grande" onclick="irA('quimicos')"><span class="emoji">⚠️</span>Químicos</button>
       <button class="boton-grande" onclick="irA('tecnico')"><span class="emoji">📈</span>Fichas técnicas</button>
       <button class="boton-grande" onclick="irA('regional')"><span class="emoji">🗺️</span>Mi zona</button>
-      <button class="boton-grande" onclick="irA('cultivos')"><span class="emoji">🌿</span>Plantas medicinales</button>
+      <button class="boton-grande boton-registro" onclick="irA('registro')"><span class="emoji">📍</span>Registrar visita<BR><span class="desc">GPS, producto y área</span></button>
     </div>
     <div id="contenedor-instalar"></div>
     <div class="tarjeta">
@@ -244,6 +246,7 @@ function verInicio() {
         <li><b>⚠️ Químicos:</b> información de agroquímicos, solo para casos graves.</li>
         <li><b>📈 Fichas técnicas:</b> altitud, densidad de siembra, rendimiento por hectárea, fases del cultivo y costos. Para producir en serio.</li>
         <li><b>🗺️ Mi zona:</b> dónde estás y qué se cultiva en tu corregimiento. Datos de la Alcaldía de Cali.</li>
+        <li><b>📍 Registrar visita:</b> toma el GPS, anota el producto y el área sembrada. Los datos se acumulan y te dan promedios por zona y por producto.</li>
       </ul>
       <div class="aviso"><b>📴 Funciona sin internet.</b> Toda la información queda guardada en el teléfono. Solo la identificación por foto con IA necesita conexión.</div>
     </div>

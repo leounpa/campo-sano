@@ -444,12 +444,81 @@ ul.lista li {
   font-size: .85rem;
 }
 
-/* Con 8 botones el menú inferior necesita letra más pequeña */
+/* ---------- Registro en campo ---------- */
+
+.campo {
+  display: block;
+  font-size: .85rem;
+  color: #557055;
+  margin: 10px 0 4px;
+  font-weight: bold;
+}
+
+.boton-guardar {
+  background: #2e7d32;
+  border-color: #1b5e20;
+  color: #fff;
+  text-align: center;
+  margin-top: 16px;
+}
+
+.boton-guardar:active {
+  background: #1b5e20;
+}
+
+.boton-guardar .desc {
+  color: #cfe8c8;
+}
+
+.boton-peligro {
+  background: #ffebee;
+  border-color: #e57373;
+  color: #c62828;
+  text-align: center;
+}
+
+.boton-registro {
+  border-color: #1565c0;
+  background: #e8f1fb;
+}
+
+.gps-ok {
+  border-left: 6px solid #1565c0;
+  background: #f7fbff;
+  margin-top: 10px;
+}
+
+.cifras {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.cifra {
+  background: #eef5e6;
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.cifra b {
+  display: block;
+  font-size: 1.35rem;
+  color: #2e7d32;
+}
+
+.cifra span {
+  font-size: .75rem;
+  color: #557055;
+}
+
+/* Con 9 botones el menú inferior necesita letra más pequeña */
 #menu-inferior .m-item span {
-  font-size: .55rem;
+  font-size: .52rem;
 }
 
 #menu-inferior .m-item {
-  padding: 6px 1px 8px;
-  font-size: 1.3rem;
+  padding: 5px 1px 7px;
+  font-size: 1.2rem;
 }

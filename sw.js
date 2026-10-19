@@ -1,5 +1,5 @@
 // Campo Sano - Service worker para funcionar sin internet
-const CACHE = "campo-sano-v10";
+const CACHE = "campo-sano-v11";
 
 const ARCHIVOS = [
   "./",
@@ -9,12 +9,14 @@ const ARCHIVOS = [
   "./icon-512.png",
   "./css/style.css",
   "./js/app.js",
+  "./js/registro.js",
   "./data/cultivos.js",
   "./data/plagas.js",
   "./data/identificacion.js",
   "./data/plantas.js",
   "./data/tecnico.js",
-  "./data/regional.js"
+  "./data/regional.js",
+  "./data/zonas.js"
 ];
 
 self.addEventListener("install", (e) => {
